@@ -103,6 +103,10 @@ void glTest() {
 	unsigned int shaderProgram;
 	shaderProgram = glCreateProgram();
 
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
