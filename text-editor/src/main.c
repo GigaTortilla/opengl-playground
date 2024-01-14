@@ -7,11 +7,6 @@
 #include <stdbool.h>
 #include <gl_test.h>
 
-void processInput(GLFWwindow* window) {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-}
-
 void create_test_file(char** argv) {
 	char path[1000];
 	getcwd(path, sizeof(path));

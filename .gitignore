@@ -47,8 +47,6 @@
 
 # ignore stuff
 .vs/**/
-*.vcxproj
-*.vcxproj.*
 *.enc
 *.tlog
 *.log
