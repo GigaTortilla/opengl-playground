@@ -3,10 +3,17 @@
   <ItemGroup>
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\glad.c" />
-    <ClCompile Include="gl_test.c" />
+    <ClCompile Include="src\shaders.c" />
+    <ClCompile Include="src\gl_test.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\unistd.h" />
     <ClInclude Include="include\gl_test.h" />
+    <ClInclude Include="include\shaders.h" />
+    <ClInclude Include="include\stb_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\basic.vert" />
+    <None Include="shaders\basic.frag" />
   </ItemGroup>
 </Project>

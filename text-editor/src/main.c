@@ -23,7 +23,7 @@ void create_test_file(char** argv) {
 }
 
 int main(int argc, char** argv) {
-	// create test file and pass into first argument if not specified
+	//// create test file and pass into first argument if not specified
 	//if (argc == 1)
 	//	create_test_file(argv);
 	//

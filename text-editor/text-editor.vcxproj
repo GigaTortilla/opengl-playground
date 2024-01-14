@@ -19,13 +19,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="gl_test.c" />
     <ClCompile Include="src\glad.c" />
+    <ClCompile Include="src\gl_test.c" />
     <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\shaders.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\gl_test.h" />
+    <ClInclude Include="include\shaders.h" />
+    <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\unistd.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\basic.frag" />
+    <None Include="shaders\basic.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -82,10 +89,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>F:\repos\text-editor\text-editor\include;F:\repos\text-editor\text-editor\include;$(IncludePath)</IncludePath>
     <LibraryPath>F:\repos\text-editor\text-editor\lib;F:\repos\text-editor\text-editor\lib;$(LibraryPath)</LibraryPath>
+    <SourcePath>F:\repos\text-editor\text-editor\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>F:\repos\text-editor\text-editor\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>F:\repos\text-editor\text-editor\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <SourcePath>F:\repos\text-editor\text-editor\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
