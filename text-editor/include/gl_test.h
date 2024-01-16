@@ -6,6 +6,7 @@ GLFWwindow* initWindow(int width, int height);
 
 static int WINDOW_WIDTH = 1600;
 static int WINDOW_HEIGHT = 900;
+static float CENTER_OFFSET = 0.2f;
 
 // triangles
 static float triVerticesOne[] = {
@@ -26,6 +27,10 @@ static float texVertices[] = {
 	 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
 	-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
 	-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+};
+static unsigned int texIndices[] = {
+		0, 1, 3, // first triangle
+		1, 2, 3  // second triangle
 };
 
 // triangle with colored vertices

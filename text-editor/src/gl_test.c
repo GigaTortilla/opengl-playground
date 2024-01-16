@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stb_image.h>
+#include <Windows.h>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -77,6 +78,19 @@ void glTest() {
 	glGenBuffers(1, &VBO);
 	unsigned int VAO = genBindVAO(VBO, texVertices, sizeof(texVertices));
 
+	// rectangle EBO
+	unsigned int EBO = genBindEBO(texVertices, texIndices, sizeof(texIndices));
+
+	// build and use shader program
+	char vertPath[256];
+	getcwd(vertPath, sizeof(vertPath));
+	strcat(vertPath, "\\shaders\\basic.vert");
+	char fragPath[256];
+	getcwd(fragPath, sizeof(fragPath));
+	strcat(fragPath, "\\shaders\\basic.frag");
+	unsigned int program = buildShaderProgram(vertPath, fragPath);
+	glUseProgram(program);
+
 	// pointer arithmetic for attributes
 	// pos
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -88,15 +102,48 @@ void glTest() {
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 	
-	// build and use shader program
-	char vertPath[256];
-	getcwd(vertPath, sizeof(vertPath));
-	strcat(vertPath, "\\shaders\\basic.vert");
-	char fragPath[256];
-	getcwd(fragPath, sizeof(fragPath));
-	strcat(fragPath, "\\shaders\\basic.frag");
-	unsigned int program = buildShaderProgram(vertPath, fragPath);
-	glUseProgram(program);
+	// load images
+	stbi_set_flip_vertically_on_load(true);
+	int width1, width2, height1, height2, nrChannels1, nrChannels2;
+	unsigned char* imgData1 = stbi_load("walterwhite.jpg", &width1, &height1, &nrChannels1, 0);
+	unsigned char* imgData2 = stbi_load("saulgoodman.jpg", &width2, &height2, &nrChannels2, 0);
+	if (!imgData1 || !imgData2) {
+		perror("Could not read image file.");
+		return;
+	}
+
+	// texture generation
+	unsigned int textures[2];
+	glGenTextures(2, &textures);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	// texture wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// texture filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// create texture and free data
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData1);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(imgData1);
+
+	// second texture
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	// texture wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// texture filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// create texture and free data
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData2);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	free(imgData2);
+
+	glUniform1i(glGetUniformLocation(program, "texture1"), 0);
+	glUniform1i(glGetUniformLocation(program, "texture2"), 1);
+
+	unsigned int mixture = glGetUniformLocation(program, "mixture");
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
@@ -106,8 +153,25 @@ void glTest() {
 		glClearColor(0.2f, 0.3f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		double time = glfwGetTime();
+		double mix = (sin(time) + 1.0f) / 2.0f;
+
+		glUniform1f(mixture, mix);
+
+		// bind textures
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textures[0]);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, textures[1]);
+
+		// draw
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		// scuffed frame limit so my GPU doesn't explode
+		Sleep(1);
 	}
 
 	// clean up glfw resources
