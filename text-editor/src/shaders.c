@@ -4,6 +4,10 @@
 
 char* readFileFromPath(const char* path) {
 	FILE* f = fopen(path, "rb");
+	if (!f) {
+		printf("Shader source file not found at %s\n", path);
+		return;
+	}
 	fseek(f, 0, SEEK_END);
 	long fsize = ftell(f);
 	rewind(f);
@@ -23,8 +27,7 @@ unsigned int compileVertexShader(const char* vertexShaderSource) {
 	char infoLog[512];
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
 
-	if (!success)
-	{
+	if (!success) {
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
 		printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s", infoLog);
 	}
@@ -40,8 +43,7 @@ unsigned int compileFragmentShader(const char* fragmentShaderSource) {
 	char infoLog[512];
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 
-	if (!success)
-	{
+	if (!success) {
 		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
 		printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s", infoLog);
 	}
@@ -62,7 +64,9 @@ unsigned int buildShaderProgram(const char* vertPath, const char* fragPath) {
 	glAttachShader(program, fragShader);
 	glLinkProgram(program);
 
-	// delete shader objects after linking
+	// delete shader and free path memory
+	free(vertPath);
+	free(fragPath);
 	glDeleteShader(vertShader);
 	glDeleteShader(fragShader);
 

@@ -7,20 +7,20 @@
 #include <stdbool.h>
 #include <gl_test.h>
 
-void create_test_file(char** argv) {
-	char path[1000];
-	getcwd(path, sizeof(path));
-	strcat(path, "\\test.txt");
-
-	FILE* file = fopen(path, "w");
-	char* test_text = "Hello World!\nThis is a second line.";
-	fwrite(test_text, 1, strlen(test_text), file);
-	fclose(file);
-	
-	free(argv[1]);
-	argv[1] = malloc(strlen(path));
-	strcpy(argv[1], path);
-}
+//void create_test_file(char** argv) {
+//	char path[1000];
+//	getcwd(path, sizeof(path));
+//	strcat(path, "\\test.txt");
+//
+//	FILE* file = fopen(path, "w");
+//	char* test_text = "Hello World!\nThis is a second line.";
+//	fwrite(test_text, 1, strlen(test_text), file);
+//	fclose(file);
+//	
+//	free(argv[1]);
+//	argv[1] = malloc(strlen(path));
+//	strcpy(argv[1], path);
+//}
 
 int main(int argc, char** argv) {
 	//// create test file and pass into first argument if not specified
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 	//fclose(file);
 	//printf("Contents:\n%s\n", contents);
 
-	glTest();
+	render_image_mix();
 	
 	return 0;
 }

@@ -69,7 +69,8 @@ unsigned int genBindEBO(float vertices[], unsigned int indices[], size_t iSize) 
 
 	return EBO;
 }
-void glTest() {
+// render 2 textures into a rectangle and continuously mix them together
+void render_image_mix() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
@@ -81,13 +82,16 @@ void glTest() {
 	// rectangle EBO
 	unsigned int EBO = genBindEBO(texVertices, texIndices, sizeof(texIndices));
 
-	// build and use shader program
-	char vertPath[256];
-	getcwd(vertPath, sizeof(vertPath));
-	strcat(vertPath, "\\shaders\\basic.vert");
-	char fragPath[256];
-	getcwd(fragPath, sizeof(fragPath));
-	strcat(fragPath, "\\shaders\\basic.frag");
+	// vertex shader
+	char* vertPath = malloc(256);
+	vertPath = getcwd(vertPath, 256);
+	strcat(vertPath, "\\shaders\\render_image_mix.vert");
+
+	// fragment shader
+	char* fragPath = malloc(256);
+	fragPath = getcwd(fragPath, 256);
+	strcat(fragPath, "\\shaders\\render_image_mix.frag");
+	// build and use
 	unsigned int program = buildShaderProgram(vertPath, fragPath);
 	glUseProgram(program);
 
@@ -105,8 +109,8 @@ void glTest() {
 	// load images
 	stbi_set_flip_vertically_on_load(true);
 	int width1, width2, height1, height2, nrChannels1, nrChannels2;
-	unsigned char* imgData1 = stbi_load("walterwhite.jpg", &width1, &height1, &nrChannels1, 0);
-	unsigned char* imgData2 = stbi_load("saulgoodman.jpg", &width2, &height2, &nrChannels2, 0);
+	unsigned char* imgData1 = stbi_load("images\\dejavu.jpg", &width1, &height1, &nrChannels1, 0);
+	unsigned char* imgData2 = stbi_load("images\\eternaforest.jpg", &width2, &height2, &nrChannels2, 0);
 	if (!imgData1 || !imgData2) {
 		perror("Could not read image file.");
 		return;
@@ -125,7 +129,7 @@ void glTest() {
 	// create texture and free data
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData1);
 	glGenerateMipmap(GL_TEXTURE_2D);
-	stbi_image_free(imgData1);
+	free(imgData1);
 
 	// second texture
 	glBindTexture(GL_TEXTURE_2D, textures[1]);
@@ -170,7 +174,7 @@ void glTest() {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
-		// scuffed frame limit so my GPU doesn't explode
+		// scuffed frame limiter
 		Sleep(1);
 	}
 

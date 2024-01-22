@@ -34,6 +34,10 @@
     <None Include="shaders\basic.frag" />
     <None Include="shaders\basic.vert" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="images\dejavu.jpg" />
+    <Image Include="images\eternaforest.jpg" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

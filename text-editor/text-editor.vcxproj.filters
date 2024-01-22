@@ -16,4 +16,8 @@
     <None Include="shaders\basic.vert" />
     <None Include="shaders\basic.frag" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="images\dejavu.jpg" />
+    <Image Include="images\eternaforest.jpg" />
+  </ItemGroup>
 </Project>

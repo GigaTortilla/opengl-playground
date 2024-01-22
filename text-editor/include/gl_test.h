@@ -1,6 +1,6 @@
 #ifndef GL_TEST_H
 #define GL_TEST_H 1
-void glTest();
+void render_image_mix();
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 GLFWwindow* initWindow(int width, int height);
 
