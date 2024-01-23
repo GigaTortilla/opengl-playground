@@ -70,6 +70,18 @@ unsigned int genBindEBO(float vertices[], unsigned int indices[], size_t iSize) 
 
 	return EBO;
 }
+void textureRectanglePointerArithmetic() {
+	// pointer arithmetic for attributes
+	// pos
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// color
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// texture coord
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+}
 // render 2 textures into a rectangle and continuously mix them together
 void render_image_mix() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -96,16 +108,7 @@ void render_image_mix() {
 	unsigned int program = buildShaderProgram(vertPath, fragPath);
 	glUseProgram(program);
 
-	// pointer arithmetic for attributes
-	// pos
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// texture coord
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	textureRectanglePointerArithmetic();
 	
 	// load images
 	stbi_set_flip_vertically_on_load(true);
@@ -113,7 +116,7 @@ void render_image_mix() {
 	unsigned char* imgData1 = stbi_load("images\\dejavu.jpg", &width1, &height1, &nrChannels1, 0);
 	unsigned char* imgData2 = stbi_load("images\\eternaforest.jpg", &width2, &height2, &nrChannels2, 0);
 	if (!imgData1 || !imgData2) {
-		perror("Could not read image file.");
+		printf("Could not read image file.");
 		return;
 	}
 
@@ -187,13 +190,63 @@ void gl_test() {
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-	vec3s trans_vec = {
-		.x = 1.0f,
-		.y = 1.0f,
-		.z = 1.0f
-	};
-	mat4s trans_mat = glms_translate_make(trans_vec);
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	unsigned int VAO = genBindVAO(VBO, texVertices, sizeof(texVertices));
+
+	// rectangle EBO
+	unsigned int EBO = genBindEBO(texVertices, texIndices, sizeof(texIndices));
+
+	// vertex shader
+	char* vertPath = malloc(256);
+	vertPath = getcwd(vertPath, 256);
+	strcat(vertPath, "\\shaders\\rotate1.vert");
+
+	// fragment shader
+	char* fragPath = malloc(256);
+	fragPath = getcwd(fragPath, 256);
+	strcat(fragPath, "\\shaders\\rotate1.frag");
 	
+	// build and use
+	unsigned int program = buildShaderProgram(vertPath, fragPath);
+	glUseProgram(program);
+
+	textureRectanglePointerArithmetic();
+
+	// load images
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	unsigned char* imgData = stbi_load("images\\dejavu.jpg", &width, &height, &nrChannels, 0);
+	if (!imgData) {
+		printf("Could not read image file.");
+		return;
+	}
+
+	// texture generation
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	// texture wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// texture filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// create texture and free data
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	free(imgData);
+
+	glUniform1i(glGetUniformLocation(program, "texture1"), 0);
+
+	// matrix math
+	vec3s z_axis = { .z = 1.0f };
+	mat4s mat = glms_rotate_make(90.0f, z_axis);
+	vec3s scal_vec = {
+		.x = 0.5f, .y = 0.5f, .z = 0.5f
+	};
+	mat = glms_scale(mat, scal_vec);
+
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -201,6 +254,11 @@ void gl_test() {
 		// reload color
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
