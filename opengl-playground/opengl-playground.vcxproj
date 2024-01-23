@@ -91,14 +91,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Daten\Johannes\repos\opengl-playground\opengl-playground\include;F:\repos\text-editor\text-editor\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Daten\Johannes\repos\opengl-playground\opengl-playground\lib;F:\repos\text-editor\text-editor\lib;$(LibraryPath)</LibraryPath>
-    <SourcePath>C:\Daten\Johannes\repos\opengl-playground\opengl-playground\src;$(SourcePath)</SourcePath>
+    <IncludePath>F:\repos\opengl-playground\opengl-playground\include;C:\Daten\Johannes\repos\opengl-playground\opengl-playground\include;F:\repos\text-editor\text-editor\include;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\repos\opengl-playground\opengl-playground\lib;C:\Daten\Johannes\repos\opengl-playground\opengl-playground\lib;F:\repos\text-editor\text-editor\lib;$(LibraryPath)</LibraryPath>
+    <SourcePath>F:\repos\opengl-playground\opengl-playground\src;C:\Daten\Johannes\repos\opengl-playground\opengl-playground\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>F:\repos\text-editor\text-editor\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>F:\repos\text-editor\text-editor\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <SourcePath>F:\repos\text-editor\text-editor\src;$(SourcePath)</SourcePath>
+    <IncludePath>F:\repos\opengl-playground\opengl-playground\include;F:\repos\text-editor\text-editor\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>F:\repos\opengl-playground\opengl-playground\lib;F:\repos\text-editor\text-editor\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <SourcePath>F:\repos\opengl-playground\opengl-playground\src;F:\repos\text-editor\text-editor\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

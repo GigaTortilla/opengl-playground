@@ -185,7 +185,7 @@ void render_image_mix() {
 	// clean up glfw resources
 	glfwTerminate();
 }
-void gl_test() {
+void spin_and_scale() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
@@ -216,36 +216,49 @@ void gl_test() {
 	// load images
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrChannels;
-	unsigned char* imgData = stbi_load("images\\dejavu.jpg", &width, &height, &nrChannels, 0);
-	if (!imgData) {
+	unsigned char* imgData1 = stbi_load("images\\dejavu.jpg", &width, &height, &nrChannels, 0);
+	unsigned char* imgData2 = stbi_load("images\\eternaforest.jpg", &width, &height, &nrChannels, 0);
+	if (!imgData1 || !imgData2) {
 		printf("Could not read image file.");
 		return;
 	}
 
 	// texture generation
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	unsigned int textures[2];
+	glGenTextures(2, &textures);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	// texture wrapping
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// texture filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// create texture and free data
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData1);
 	glGenerateMipmap(GL_TEXTURE_2D);
-	free(imgData);
+	free(imgData1);
 
-	glUniform1i(glGetUniformLocation(program, "texture1"), 0);
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	// texture wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	// texture filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// create texture and free data
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData2);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	free(imgData2);
 
-	// matrix math
-	vec3s z_axis = { .z = 1.0f };
-	mat4s mat = glms_rotate_make(90.0f, z_axis);
-	vec3s scal_vec = {
-		.x = 0.5f, .y = 0.5f, .z = 0.5f
+	
+	vec3s trans_vec1 = {
+		.x = 0.5f, .y = 0.5f
 	};
-	mat = glms_scale(mat, scal_vec);
+	vec3s trans_vec2 = {
+		.x = -0.5f, .y = -0.5f
+	};
+
+	unsigned int transformLoc = glGetUniformLocation(program, "transform");
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
@@ -255,9 +268,26 @@ void gl_test() {
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		// first texture
+		double time = 0.0 - glfwGetTime();
+		mat4s mat1 = glms_translate_make(trans_vec1);
+		mat1 = glms_rotate(mat1, time, Z_AXIS);
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, mat1.raw);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, textures[0]);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+		double sin_time = sin(time) / 2 + 0.5;
+		vec3s scal_vec = {
+			.x = sin_time, .y = sin_time, .z = sin_time
+		};
+
+		// second texture
+		mat4s mat2 = glms_translate_make(trans_vec2);
+		mat2 = glms_scale(mat2, scal_vec);
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, mat2.raw);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textures[1]);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);

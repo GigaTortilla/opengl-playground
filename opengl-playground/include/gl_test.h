@@ -8,6 +8,10 @@ static int WINDOW_WIDTH = 1600;
 static int WINDOW_HEIGHT = 900;
 static float CENTER_OFFSET = 0.2f;
 
+#define X_AXIS (vec3s){ 1.0f, 0.0f, 0.0f }
+#define Y_AXIS (vec3s){ 0.0f, 1.0f, 0.0f }
+#define Z_AXIS (vec3s){ 0.0f, 0.0f, 1.0f }
+
 // triangles
 static float triVerticesOne[] = {
 	-0.5f, -0.5f, 0.0f,

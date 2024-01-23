@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 	//printf("Contents:\n%s\n", contents);
 
 	//render_image_mix();
-	gl_test();
+	spin_and_scale();
 
 	return 0;
 }
