@@ -10,7 +10,8 @@
 int main(int argc, char** argv) {
 	//render_image_mix();
 	//spin_and_scale_2d();
-	render_rectangle_3d();
+	//render_rectangle_3d();
+	spin_cube();
 
 	return 0;
 }

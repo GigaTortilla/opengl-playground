@@ -254,7 +254,6 @@ void render_rectangle_3d() {
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
 	// matrices
-	mat4s ortho = glms_ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT, 0.1f, 100.0f);
 	mat4s perspective = glms_perspective(glm_rad(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
 	mat4s model = glms_rotate_make(glm_rad(-55.0f), X_AXIS);
 	mat4s view = glms_translate_make((vec3s){ 0.0f, 0.0f, -3.0f });
@@ -269,7 +268,7 @@ void render_rectangle_3d() {
 	textureRectanglePointerArithmetic();
 
 	// shader program
-	unsigned int program = buildShaderProgram("gl_test.vert", "gl_test.frag");
+	unsigned int program = buildShaderProgram("render_rectangle_3d.vert", "render_rectangle_3d.frag");
 	glUseProgram(program);
 	
 	// create and bind texture from image
@@ -287,6 +286,9 @@ void render_rectangle_3d() {
 	int modelLoc = glGetUniformLocation(program, "model");
 	int viewLoc = glGetUniformLocation(program, "view");
 	int perspectiveLoc = glGetUniformLocation(program, "perspective");
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
+	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
@@ -296,12 +298,77 @@ void render_rectangle_3d() {
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
-		glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		Sleep(1);
+	}
+}
+void spin_cube() {
+	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
+
+	// pointer arithmetic for attributes
+	// pos
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// texture coord
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// shader program
+	unsigned int program = buildShaderProgram("gl_test.vert", "gl_test.frag");
+	glUseProgram(program);
+
+	// create and bind texture from image
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	byte* imgData = stbi_load("images\\dejavu.jpg", &width, &height, &nrChannels, 0);
+	if (!imgData) {
+		printf("Could not read image file.");
+		return;
+	}
+	unsigned int texture = genBindStdTexture(imgData, width, height);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	int modelLoc = glGetUniformLocation(program, "model");
+	int viewLoc = glGetUniformLocation(program, "view");
+	int perspectiveLoc = glGetUniformLocation(program, "perspective");
+	
+	// matrices
+	mat4s perspective = glms_perspective(glm_rad(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
+	mat4s view = glms_translate_make((vec3s) { 0.0f, 0.0f, -3.0f });
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
+	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
+
+	// enable depth buffer
+	glEnable(GL_DEPTH_TEST);
+
+	// render loop
+	while (!glfwWindowShouldClose(window)) {
+		processInput(window);
+
+		// reload color and depth buffer
+		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// recalculate rotation per frame
+		mat4s model = glms_rotate_make((float)glfwGetTime() * glm_rad(50.0f), (vec3s){ 0.5f, 1.0f, 0.0f });
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+		
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+		Sleep(1);
 	}
 }
