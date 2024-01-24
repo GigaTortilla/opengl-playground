@@ -1,21 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glad/glad.h>
+#include <string.h>
+#include <unistd.h>
 
 char* readFileFromPath(const char* path) {
 	FILE* f = fopen(path, "rb");
 	if (!f) {
 		printf("Shader source file not found at %s\n", path);
-		return;
+		return 0;
 	}
 	fseek(f, 0, SEEK_END);
 	long fsize = ftell(f);
 	rewind(f);
-	char* string = malloc(fsize + 1);
-	fread(string, fsize, 1, f);
+	char* str = malloc(fsize + 1);
+	if (!str) {
+		printf("Out of memory.\n");
+		return 0;
+	}
+	fread(str, fsize + 1, 1, f);
 	fclose(f);
-	string[fsize] = 0;
-	return string;
+	str[fsize] = 0;
+	return str;
 }
 unsigned int compileVertexShader(const char* vertexShaderSource) {
 	unsigned int vertexShader;
@@ -49,7 +55,19 @@ unsigned int compileFragmentShader(const char* fragmentShaderSource) {
 	}
 	return fragmentShader;
 }
-unsigned int buildShaderProgram(const char* vertPath, const char* fragPath) {
+unsigned int buildShaderProgram(const char* vertFileName, const char* fragFileName) {
+	// vertex shader
+	char vertPath[1024];
+	char* _ = getcwd(vertPath, 1024);
+	strcat(vertPath, "\\shaders\\");
+	strcat(vertPath, vertFileName);
+
+	// fragment shader
+	char fragPath[1024];
+	_ = getcwd(fragPath, 1024);
+	strcat(fragPath, "\\shaders\\");
+	strcat(fragPath, fragFileName);
+	
 	char* vertSource = readFileFromPath(vertPath);
 	char* fragSource = readFileFromPath(fragPath);
 
@@ -64,9 +82,7 @@ unsigned int buildShaderProgram(const char* vertPath, const char* fragPath) {
 	glAttachShader(program, fragShader);
 	glLinkProgram(program);
 
-	// delete shader and free path memory
-	free(vertPath);
-	free(fragPath);
+	// delete shader
 	glDeleteShader(vertShader);
 	glDeleteShader(fragShader);
 

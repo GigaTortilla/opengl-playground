@@ -1,16 +1,26 @@
 #ifndef GL_TEST_H
 #define GL_TEST_H 1
-void render_image_mix();
-void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-GLFWwindow* initWindow(int width, int height);
-
-static int WINDOW_WIDTH = 1600;
-static int WINDOW_HEIGHT = 900;
-static float CENTER_OFFSET = 0.2f;
 
 #define X_AXIS (vec3s){ 1.0f, 0.0f, 0.0f }
 #define Y_AXIS (vec3s){ 0.0f, 1.0f, 0.0f }
 #define Z_AXIS (vec3s){ 0.0f, 0.0f, 1.0f }
+#define NEAR_PLANE 0.1f
+#define FAR_PLANE 100.0f
+
+#define WINDOW_WIDTH 1600
+#define WINDOW_HEIGHT 900
+#define CENTER_OFFSET 0.2f
+
+void render_image_mix();
+void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+GLFWwindow* initWindow(int width, int height);
+unsigned int genBindVAO(unsigned int VBO, float vertices[], size_t size);
+unsigned int genBindVBO(float vertices[], size_t size);
+unsigned int genBindEBO(float vertices[], unsigned int indices[], size_t iSize);
+void textureRectanglePointerArithmetic();
+void render_image_mix();
+void spin_and_scale_2d();
+void render_rectangle_3d();
 
 // triangles
 static float triVerticesOne[] = {
@@ -33,8 +43,8 @@ static float texVertices[] = {
 	-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
 };
 static unsigned int texIndices[] = {
-		0, 1, 3, // first triangle
-		1, 2, 3  // second triangle
+	0, 1, 3, // first triangle
+	1, 2, 3  // second triangle
 };
 
 // triangle with colored vertices
