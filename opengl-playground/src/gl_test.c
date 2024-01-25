@@ -324,7 +324,7 @@ void spin_cube() {
 	glEnableVertexAttribArray(1);
 
 	// shader program
-	unsigned int program = buildShaderProgram("gl_test.vert", "gl_test.frag");
+	unsigned int program = buildShaderProgram("spin_cube.vert", "spin_cube.frag");
 	glUseProgram(program);
 
 	// create and bind texture from image
@@ -336,8 +336,6 @@ void spin_cube() {
 		return;
 	}
 	unsigned int texture = genBindStdTexture(imgData, width, height);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
 
 	int modelLoc = glGetUniformLocation(program, "model");
 	int viewLoc = glGetUniformLocation(program, "view");
@@ -365,6 +363,67 @@ void spin_cube() {
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
 		
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+		Sleep(1);
+	}
+}
+void spin_10_cubes() {
+	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
+
+	// pointer arithmetic
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// shader program
+	unsigned int program = buildShaderProgram("render_10_cubes.vert", "render_10_cubes.frag");
+	glUseProgram(program);
+
+	// load image
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	byte* imgData = stbi_load("images\\dejavu.jpg", &width, &height, &nrChannels, 0);
+	if (!imgData) {
+		printf("Could not load image.");
+		return;
+	}
+	unsigned int texture = genBindStdTexture(imgData, width, height);
+
+	unsigned int viewLoc = glGetUniformLocation(program, "view");
+	unsigned int modelLoc = glGetUniformLocation(program, "model");
+	unsigned int perspectiveLoc = glGetUniformLocation(program, "perspective");
+
+	// matrices
+	mat4s perspective = glms_perspective(glm_rad(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
+	mat4s view = glms_translate_make((vec3s){ 0.0f, 0.0f, -3.0f });
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
+	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
+
+	glEnable(GL_DEPTH_TEST);
+
+	while (!glfwWindowShouldClose(window)) {
+		processInput(window);
+
+		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		for (int i = 0; i < sizeof(cubePositions) / sizeof(vec3s); i++) {
+			mat4s model = glms_translate_make((vec3s){ cubePositions[i * 3], cubePositions[i * 3 + 1], cubePositions[i * 3 + 2] });
+			model = glms_rotate(model, (float)(i + 1) / 10.0f * glfwGetTime(), (vec3s) { 0.2f + 0.1f * i, 0.1f, 0.1f * i });
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

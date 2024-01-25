@@ -91,8 +91,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>F:\repos\opengl-playground\opengl-playground\include;C:\Daten\Johannes\repos\opengl-playground\opengl-playground\include;F:\repos\text-editor\text-editor\include;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\repos\opengl-playground\opengl-playground\lib;C:\Daten\Johannes\repos\opengl-playground\opengl-playground\lib;F:\repos\text-editor\text-editor\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>F:\repos\opengl-playground\opengl-playground\include;C:\Daten\Johannes\repos\opengl-playground\opengl-playground\include;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\repos\opengl-playground\opengl-playground\lib;C:\Daten\Johannes\repos\opengl-playground\opengl-playground\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>F:\repos\opengl-playground\opengl-playground\src;C:\Daten\Johannes\repos\opengl-playground\opengl-playground\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
