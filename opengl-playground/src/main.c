@@ -12,7 +12,9 @@ int main(int argc, char** argv) {
 	//spin_and_scale_2d();
 	//render_rectangle_3d();
 	//spin_cube();
-	spin_10_cubes();
+	//spin_10_cubes();
+	//rotate_scene();
+	free_movement();
 
 	return 0;
 }

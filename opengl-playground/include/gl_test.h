@@ -7,7 +7,7 @@
 #define NEAR_PLANE 0.1f
 #define FAR_PLANE 100.0f
 
-#define WINDOW_WIDTH 1600
+#define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 900
 #define CENTER_OFFSET 0.2f
 
@@ -18,10 +18,16 @@ unsigned int genBindVAO(unsigned int VBO, float vertices[], size_t size);
 unsigned int genBindVBO(float vertices[], size_t size);
 unsigned int genBindEBO(float vertices[], unsigned int indices[], size_t iSize);
 void textureRectanglePointerArithmetic();
+unsigned int genBindStdTexture(char* imgData, int width, int height);
+void updateCamera(GLFWwindow* window, float frameDelta);
+void calculateMouseMovements();
 void render_image_mix();
 void spin_and_scale_2d();
 void render_rectangle_3d();
 void spin_cube();
+void spin_10_cubes();
+void rotate_scene();
+void free_movement();
 
 // triangles
 static float triVerticesOne[] = {
@@ -127,13 +133,13 @@ static float cubeVertices[] = {
 static float cubePositions[] = {
     0.0f,  0.0f,  0.0f,
     2.0f,  5.0f, -15.0f,
-    -1.5f, -2.2f, -2.5f,
-    -3.8f, -2.0f, -12.3f,
+   -1.5f, -2.2f, -2.5f,
+   -3.8f, -2.0f, -12.3f,
     2.4f, -0.4f, -3.5f,
-    -1.7f,  3.0f, -7.5f,
+   -1.7f,  3.0f, -7.5f,
     1.3f, -2.0f, -2.5f,
     1.5f,  2.0f, -2.5f,
     1.5f,  0.2f, -1.5f,
-    -1.3f,  1.0f, -1.5f
+   -1.3f,  1.0f, -1.5f
 };
 #endif

@@ -19,12 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\camera.c" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\gl_test.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\shaders.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\camera.h" />
     <ClInclude Include="include\gl_test.h" />
     <ClInclude Include="include\shaders.h" />
     <ClInclude Include="include\stb_image.h" />

@@ -10,15 +10,65 @@
 #include <stb_image.h>
 #include <Windows.h>
 #include <cglm/struct.h>
+#include <camera.h>
 
-void framebufferSizeCallback(GLFWwindow* window, int width, int height)
-{
+/////////////////////////////////////////////////////////////////////////////////
+// Globals
+
+const float sens = 0.1f;
+float g_yaw = -90.0f;
+float g_pitch = 0.0f;
+float g_lastMouseX = 300.0f;
+float g_lastMouseY = 400.0f;
+bool g_firstMouse = true;
+float g_fov = 45.0f;
+
+/////////////////////////////////////////////////////////////////////////////////
+// Callbacks
+
+void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
-void processInput(GLFWwindow* window)
-{
+void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+	if (g_firstMouse) {
+		g_lastMouseX = xpos;
+		g_lastMouseY = ypos;
+		g_firstMouse = false;
+	}
+
+	float xOffset = xpos - g_lastMouseX;
+	float yOffset = g_lastMouseY - ypos;
+	g_lastMouseX = xpos;
+	g_lastMouseY = ypos;
+
+	xOffset *= sens;
+	yOffset *= sens;
+	
+	g_yaw += xOffset;
+	g_pitch += yOffset;
+
+	// limit pitch
+	if (g_pitch > 89.0f)
+		g_pitch = 89.0f;
+	if (g_pitch < -89.0f)
+		g_pitch = -89.0f;
+}
+void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset) {
+	g_fov -= (float)yoffset;
+	if (g_fov < 1.0f)
+		g_fov = 1.0f;
+	if (g_fov > 75.0f)
+		g_fov = 75.0f;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// Utils
+
+void processInput(GLFWwindow* window, float frameDelta) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+	updateCamera(window, frameDelta);
+	calculateMouseMovements();
 }
 GLFWwindow* initWindow(int width, int height) {
 	// glfw
@@ -98,7 +148,38 @@ unsigned int genBindStdTexture(byte* imgData, int width, int height) {
 	free(imgData);
 	return texture;
 }
-// render 2 textures into a rectangle and continuously mix them together
+void updateCamera(GLFWwindow* window, float frameDelta) {
+	cameraSpeed = 2.5f * frameDelta;
+	if (glfwGetKey(window, GLFW_KEY_W))
+		cameraPos = glms_vec3_add(cameraPos, glms_vec3_scale(cameraFront, cameraSpeed));
+	if (glfwGetKey(window, GLFW_KEY_S))
+		cameraPos = glms_vec3_sub(cameraPos, glms_vec3_scale(cameraFront, cameraSpeed));
+	if (glfwGetKey(window, GLFW_KEY_D))
+		cameraPos = glms_vec3_add(cameraPos, glms_vec3_scale(glms_normalize(glms_cross(cameraFront, Y_AXIS)), cameraSpeed));
+	if (glfwGetKey(window, GLFW_KEY_A))
+		cameraPos = glms_vec3_sub(cameraPos, glms_vec3_scale(glms_normalize(glms_cross(cameraFront, Y_AXIS)), cameraSpeed));
+}
+float updateFrameDelta(float* lastFrame) {
+	// update frame time
+	float currFrame = glfwGetTime();
+	float deltaTime = currFrame - *lastFrame;
+	*lastFrame = currFrame;
+	return deltaTime;
+}
+void calculateMouseMovements() {
+	float xRota = glm_rad(g_pitch);
+	float yRota = glm_rad(g_yaw);
+	vec3s direction = {
+		.x = cos(yRota) * cos(xRota),
+		.y = sin(xRota),
+		.z = sin(yRota) * cos(xRota)
+	};
+	cameraFront = glms_normalize(direction);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// Test Programs
+
 void render_image_mix() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -139,7 +220,7 @@ void render_image_mix() {
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window);
+		processInput(window, 0.0f);
 
 		// reload color
 		glClearColor(0.2f, 0.3f, 0.2f, 1.0f);
@@ -213,7 +294,7 @@ void spin_and_scale_2d() {
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window);
+		processInput(window, 0.0f);
 
 		// reload color
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
@@ -247,6 +328,9 @@ void spin_and_scale_2d() {
 		// scuffed frame limiter
 		Sleep(1);
 	}
+
+	// clean up glfw resources
+	glfwTerminate();
 }
 void render_rectangle_3d() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -292,7 +376,7 @@ void render_rectangle_3d() {
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window);
+		processInput(window, 0.0f);
 
 		// reload color
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
@@ -305,6 +389,9 @@ void render_rectangle_3d() {
 
 		Sleep(1);
 	}
+
+	// clean up glfw resources
+	glfwTerminate();
 }
 void spin_cube() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -352,7 +439,7 @@ void spin_cube() {
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window);
+		processInput(window, 0.0f);
 
 		// reload color and depth buffer
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
@@ -369,6 +456,9 @@ void spin_cube() {
 
 		Sleep(1);
 	}
+
+	// clean up glfw resources
+	glfwTerminate();
 }
 void spin_10_cubes() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -386,7 +476,70 @@ void spin_10_cubes() {
 	glEnableVertexAttribArray(1);
 
 	// shader program
-	unsigned int program = buildShaderProgram("render_10_cubes.vert", "render_10_cubes.frag");
+	unsigned int program = buildShaderProgram("spin_cube.vert", "spin_cube.frag");
+	glUseProgram(program);
+
+	// load image
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	byte* imgData = stbi_load("images\\dejavu.jpg", &width, &height, &nrChannels, 0);
+	if (!imgData) {
+		printf("Could not load image.");
+		return;
+	}
+	unsigned int texture = genBindStdTexture(imgData, width, height);
+
+	unsigned int viewLoc = glGetUniformLocation(program, "view");
+	unsigned int modelLoc = glGetUniformLocation(program, "model");
+	unsigned int perspectiveLoc = glGetUniformLocation(program, "perspective");
+
+	// matrices
+	mat4s perspective = glms_perspective(glm_rad(55.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
+	mat4s view = glms_translate_make((vec3s){ 0.0f, 0.0f, -3.0f });
+	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
+
+	glEnable(GL_DEPTH_TEST);
+
+	while (!glfwWindowShouldClose(window)) {
+		processInput(window, 0.0f);
+
+		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		for (int i = 0; i < sizeof(cubePositions) / sizeof(vec3s); i++) {
+			mat4s model = glms_translate_make((vec3s){ cubePositions[i * 3], cubePositions[i * 3 + 1], cubePositions[i * 3 + 2] });
+			model = glms_rotate(model, (float)(i + 1) / 10.0f * glfwGetTime(), (vec3s) { 0.2f + 0.1f * i, 0.1f, 0.1f * i });
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+		Sleep(1);
+	}
+
+	// clean up glfw resources
+	glfwTerminate();
+}
+void rotate_scene() {
+	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
+
+	// pointer arithmetic
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// shader program
+	unsigned int program = buildShaderProgram("spin_cube.vert", "spin_cube.frag");
 	glUseProgram(program);
 
 	// load image
@@ -405,29 +558,127 @@ void spin_10_cubes() {
 
 	// matrices
 	mat4s perspective = glms_perspective(glm_rad(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
-	mat4s view = glms_translate_make((vec3s){ 0.0f, 0.0f, -3.0f });
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
 	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
 
+	// enable z-buffering
 	glEnable(GL_DEPTH_TEST);
 
+	// render loop
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window);
+		processInput(window, 0.0f);
 
 		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// draw all cubes
 		for (int i = 0; i < sizeof(cubePositions) / sizeof(vec3s); i++) {
-			mat4s model = glms_translate_make((vec3s){ cubePositions[i * 3], cubePositions[i * 3 + 1], cubePositions[i * 3 + 2] });
-			model = glms_rotate(model, (float)(i + 1) / 10.0f * glfwGetTime(), (vec3s) { 0.2f + 0.1f * i, 0.1f, 0.1f * i });
+			// translate cube inside world
+			mat4s model = glms_translate_make((vec3s) { cubePositions[i * 3], cubePositions[i * 3 + 1], cubePositions[i * 3 + 2] });
+			model = glms_rotate(model, 20.0f * (i + 1), (vec3s) { 0.2f, 0.5f, 0.2f });
+
+			// camera setup
+			const float radius = 10.0f;
+			double time = glfwGetTime();
+			float camX = sin(time) * radius;
+			float camZ = cos(time) * radius;
+			mat4s view = glms_lookat((vec3s) { camX, 0.0f, camZ }, glms_vec3_zero(), Y_AXIS);
+
+			// uniforms
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+
+			// draw
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
 		Sleep(1);
 	}
+
+	// clean up glfw resources
+	glfwTerminate();
+}
+void free_movement() {
+	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	// capture cursor
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	// set callbacks
+	glfwSetCursorPosCallback(window, mouseCallback);
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+	glfwSetScrollCallback(window, scrollCallBack);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
+
+	// pointer arithmetic
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// shader program
+	unsigned int program = buildShaderProgram("spin_cube.vert", "spin_cube.frag");
+	glUseProgram(program);
+
+	// load image
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	byte* imgData = stbi_load("images\\dejavu.jpg", &width, &height, &nrChannels, 0);
+	if (!imgData) {
+		printf("Could not load image.");
+		return;
+	}
+	unsigned int texture = genBindStdTexture(imgData, width, height);
+
+	unsigned int viewLoc = glGetUniformLocation(program, "view");
+	unsigned int modelLoc = glGetUniformLocation(program, "model");
+	unsigned int perspectiveLoc = glGetUniformLocation(program, "perspective");
+
+	// enable z-buffering
+	glEnable(GL_DEPTH_TEST);
+
+	float lastFrame = 0.0f;
+
+	// render loop
+	while (!glfwWindowShouldClose(window)) {
+		float frameDelta = updateFrameDelta(&lastFrame);
+		processInput(window, frameDelta);
+
+		glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// projection matrix
+		mat4s perspective = glms_perspective(glm_rad(g_fov), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
+		glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
+
+		// draw all cubes
+		for (int i = 0; i < sizeof(cubePositions) / sizeof(vec3s); i++) {
+			// translate cube inside world
+			mat4s model = glms_translate_make((vec3s) { cubePositions[i * 3], cubePositions[i * 3 + 1], cubePositions[i * 3 + 2] });
+			model = glms_rotate(model, 20.0f * (i + 1), (vec3s) { 0.2f, 0.5f, 0.2f });
+
+			// camera setup
+			mat4s view = glms_lookat(cameraPos, glms_vec3_add(cameraPos, cameraFront), Y_AXIS);
+
+			// uniforms
+			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+
+			// draw
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+		Sleep(1);
+	}
+
+	// clean up glfw resources
+	glfwTerminate();
 }
