@@ -15,13 +15,19 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Globals
 
-const float sens = 0.1f;
-float g_yaw = -90.0f;
-float g_pitch = 0.0f;
+Camera cam = {
+	.front = { 0.0f, 0.0f, -1.0f },
+	.pos = { 0.0f, 0.0f, 0.0f },
+	.up = { 0.0f, 1.0f, 0.0f },
+	.speed = 2.5f,
+	.pitch = -90.0f,
+	.yaw = 0.0f,
+	.fov = 45.0f,
+	.sens = 0.1f
+};
 float g_lastMouseX = 300.0f;
 float g_lastMouseY = 400.0f;
 bool g_firstMouse = true;
-float g_fov = 45.0f;
 
 /////////////////////////////////////////////////////////////////////////////////
 // Callbacks
@@ -41,24 +47,24 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	g_lastMouseX = xpos;
 	g_lastMouseY = ypos;
 
-	xOffset *= sens;
-	yOffset *= sens;
+	xOffset *= cam.sens;
+	yOffset *= cam.sens;
 	
-	g_yaw += xOffset;
-	g_pitch += yOffset;
+	cam.yaw += xOffset;
+	cam.pitch += yOffset;
 
 	// limit pitch
-	if (g_pitch > 89.0f)
-		g_pitch = 89.0f;
-	if (g_pitch < -89.0f)
-		g_pitch = -89.0f;
+	if (cam.pitch > 89.0f)
+		cam.pitch = 89.0f;
+	if (cam.pitch < -89.0f)
+		cam.pitch = -89.0f;
 }
 void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset) {
-	g_fov -= (float)yoffset;
-	if (g_fov < 1.0f)
-		g_fov = 1.0f;
-	if (g_fov > 75.0f)
-		g_fov = 75.0f;
+	cam.fov -= (float)yoffset;
+	if (cam.fov < 1.0f)
+		cam.fov = 1.0f;
+	if (cam.fov > 75.0f)
+		cam.fov = 75.0f;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -67,8 +73,8 @@ void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset) {
 void processInput(GLFWwindow* window, float frameDelta) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-	updateCamera(window, frameDelta);
-	calculateMouseMovements();
+	cam_updatePos(&cam, window, frameDelta);
+	cam_updateMouse(&cam);
 }
 GLFWwindow* initWindow(int width, int height) {
 	// glfw
@@ -123,13 +129,13 @@ unsigned int genBindEBO(float vertices[], unsigned int indices[], size_t iSize) 
 void textureRectanglePointerArithmetic() {
 	// pointer arithmetic for attributes
 	// pos
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	// color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	// texture coord
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 }
 unsigned int genBindStdTexture(byte* imgData, int width, int height) {
@@ -148,33 +154,12 @@ unsigned int genBindStdTexture(byte* imgData, int width, int height) {
 	free(imgData);
 	return texture;
 }
-void updateCamera(GLFWwindow* window, float frameDelta) {
-	cameraSpeed = 2.5f * frameDelta;
-	if (glfwGetKey(window, GLFW_KEY_W))
-		cameraPos = glms_vec3_add(cameraPos, glms_vec3_scale(cameraFront, cameraSpeed));
-	if (glfwGetKey(window, GLFW_KEY_S))
-		cameraPos = glms_vec3_sub(cameraPos, glms_vec3_scale(cameraFront, cameraSpeed));
-	if (glfwGetKey(window, GLFW_KEY_D))
-		cameraPos = glms_vec3_add(cameraPos, glms_vec3_scale(glms_normalize(glms_cross(cameraFront, Y_AXIS)), cameraSpeed));
-	if (glfwGetKey(window, GLFW_KEY_A))
-		cameraPos = glms_vec3_sub(cameraPos, glms_vec3_scale(glms_normalize(glms_cross(cameraFront, Y_AXIS)), cameraSpeed));
-}
 float updateFrameDelta(float* lastFrame) {
 	// update frame time
 	float currFrame = glfwGetTime();
 	float deltaTime = currFrame - *lastFrame;
 	*lastFrame = currFrame;
 	return deltaTime;
-}
-void calculateMouseMovements() {
-	float xRota = glm_rad(g_pitch);
-	float yRota = glm_rad(g_yaw);
-	vec3s direction = {
-		.x = cos(yRota) * cos(xRota),
-		.y = sin(xRota),
-		.z = sin(yRota) * cos(xRota)
-	};
-	cameraFront = glms_normalize(direction);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -304,7 +289,7 @@ void spin_and_scale_2d() {
 		double time = 0.0 - glfwGetTime();
 		mat4s mat1 = glms_translate_make(trans_vec1);
 		mat1 = glms_rotate(mat1, time, Z_AXIS);
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, mat1.raw);
+		glUniformMatrix4fv(transformLoc, 1, false, mat1.raw);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -317,7 +302,7 @@ void spin_and_scale_2d() {
 		// second texture
 		mat4s mat2 = glms_translate_make(trans_vec2);
 		mat2 = glms_scale(mat2, scal_vec);
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, mat2.raw);
+		glUniformMatrix4fv(transformLoc, 1, false, mat2.raw);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -370,9 +355,9 @@ void render_rectangle_3d() {
 	int modelLoc = glGetUniformLocation(program, "model");
 	int viewLoc = glGetUniformLocation(program, "view");
 	int perspectiveLoc = glGetUniformLocation(program, "perspective");
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
-	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
+	glUniformMatrix4fv(modelLoc, 1, false, model.raw);
+	glUniformMatrix4fv(viewLoc, 1, false, view.raw);
+	glUniformMatrix4fv(perspectiveLoc, 1, false, perspective.raw);
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
@@ -404,10 +389,10 @@ void spin_cube() {
 
 	// pointer arithmetic for attributes
 	// pos
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	// texture coord
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	// shader program
@@ -431,8 +416,8 @@ void spin_cube() {
 	// matrices
 	mat4s perspective = glms_perspective(glm_rad(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
 	mat4s view = glms_translate_make((vec3s) { 0.0f, 0.0f, -3.0f });
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
-	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
+	glUniformMatrix4fv(viewLoc, 1, false, view.raw);
+	glUniformMatrix4fv(perspectiveLoc, 1, false, perspective.raw);
 
 	// enable depth buffer
 	glEnable(GL_DEPTH_TEST);
@@ -447,7 +432,7 @@ void spin_cube() {
 
 		// recalculate rotation per frame
 		mat4s model = glms_rotate_make((float)glfwGetTime() * glm_rad(50.0f), (vec3s){ 0.5f, 1.0f, 0.0f });
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+		glUniformMatrix4fv(modelLoc, 1, false, model.raw);
 		
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -470,9 +455,9 @@ void spin_10_cubes() {
 	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
 
 	// pointer arithmetic
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	// shader program
@@ -496,8 +481,8 @@ void spin_10_cubes() {
 	// matrices
 	mat4s perspective = glms_perspective(glm_rad(55.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
 	mat4s view = glms_translate_make((vec3s){ 0.0f, 0.0f, -3.0f });
-	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
+	glUniformMatrix4fv(perspectiveLoc, 1, false, perspective.raw);
+	glUniformMatrix4fv(viewLoc, 1, false, view.raw);
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -510,7 +495,7 @@ void spin_10_cubes() {
 		for (int i = 0; i < sizeof(cubePositions) / sizeof(vec3s); i++) {
 			mat4s model = glms_translate_make((vec3s){ cubePositions[i * 3], cubePositions[i * 3 + 1], cubePositions[i * 3 + 2] });
 			model = glms_rotate(model, (float)(i + 1) / 10.0f * glfwGetTime(), (vec3s) { 0.2f + 0.1f * i, 0.1f, 0.1f * i });
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+			glUniformMatrix4fv(modelLoc, 1, false, model.raw);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
@@ -533,9 +518,9 @@ void rotate_scene() {
 	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
 
 	// pointer arithmetic
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	// shader program
@@ -558,7 +543,7 @@ void rotate_scene() {
 
 	// matrices
 	mat4s perspective = glms_perspective(glm_rad(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
-	glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
+	glUniformMatrix4fv(perspectiveLoc, 1, false, perspective.raw);
 
 	// enable z-buffering
 	glEnable(GL_DEPTH_TEST);
@@ -584,8 +569,8 @@ void rotate_scene() {
 			mat4s view = glms_lookat((vec3s) { camX, 0.0f, camZ }, glms_vec3_zero(), Y_AXIS);
 
 			// uniforms
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+			glUniformMatrix4fv(viewLoc, 1, false, view.raw);
+			glUniformMatrix4fv(modelLoc, 1, false, model.raw);
 
 			// draw
 			glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -616,13 +601,13 @@ void free_movement() {
 	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
 
 	// pointer arithmetic
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	// shader program
-	unsigned int program = buildShaderProgram("spin_cube.vert", "spin_cube.frag");
+	unsigned int program = buildShaderProgram("test.vert", "spin_cube.frag");
 	glUseProgram(program);
 
 	// load image
@@ -635,9 +620,7 @@ void free_movement() {
 	}
 	unsigned int texture = genBindStdTexture(imgData, width, height);
 
-	unsigned int viewLoc = glGetUniformLocation(program, "view");
-	unsigned int modelLoc = glGetUniformLocation(program, "model");
-	unsigned int perspectiveLoc = glGetUniformLocation(program, "perspective");
+	unsigned int mvpLoc = glGetUniformLocation(program, "mvp");
 
 	// enable z-buffering
 	glEnable(GL_DEPTH_TEST);
@@ -653,9 +636,8 @@ void free_movement() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// projection matrix
-		mat4s perspective = glms_perspective(glm_rad(g_fov), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
-		glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, perspective.raw);
-
+		mat4s perspective = glms_perspective(glm_rad(cam.fov), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
+		
 		// draw all cubes
 		for (int i = 0; i < sizeof(cubePositions) / sizeof(vec3s); i++) {
 			// translate cube inside world
@@ -663,11 +645,11 @@ void free_movement() {
 			model = glms_rotate(model, 20.0f * (i + 1), (vec3s) { 0.2f, 0.5f, 0.2f });
 
 			// camera setup
-			mat4s view = glms_lookat(cameraPos, glms_vec3_add(cameraPos, cameraFront), Y_AXIS);
+			mat4s view = glms_lookat(cam.pos, glms_vec3_add(cam.pos, cam.front), Y_AXIS);
 
-			// uniforms
-			glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view.raw);
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.raw);
+			// calc and send mvp
+			mat4s mvp = glms_mat4_mul(glms_mat4_mul(perspective, view), model);
+			glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
 
 			// draw
 			glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -680,5 +662,69 @@ void free_movement() {
 	}
 
 	// clean up glfw resources
+	glfwTerminate();
+}
+void gl_test() {
+	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
+
+	unsigned int program = buildShaderProgram("spin_cube.vert", "spin_cube.frag");
+	glUseProgram(program);
+
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+	// vertex pointer arithmetic
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// texture
+	stbi_set_flip_vertically_on_load(true);
+	unsigned int width, height, nrChannels;
+	byte* imgData = stbi_load("images\\dejavu.jpg", &width, &height, &nrChannels, 0);
+	if (!imgData) {
+		printf("Could not load image.");
+		return;
+	}
+	unsigned int texture = genBindStdTexture(imgData, width, height);
+	glActiveTexture(GL_TEXTURE0);
+
+	// mvp locations
+	unsigned int modelLoc = glGetUniformLocation(program, "model");
+	unsigned int viewLoc = glGetUniformLocation(program, "view");
+	unsigned int perspectiveLoc = glGetUniformLocation(program, "perspective");
+
+	// mvp
+	mat4s model = glms_mat4_identity();
+	mat4s view = glms_mat4_identity();
+	mat4s perspective = glms_mat4_identity();
+
+	// give mvp to uniforms
+	glUniformMatrix4fv(modelLoc, 1, false, model.raw);
+	glUniformMatrix4fv(viewLoc, 1, false, view.raw);
+	glUniformMatrix4fv(perspectiveLoc, 1, false, perspective.raw);
+
+	// z buffer
+	glEnable(GL_DEPTH_TEST);
+
+	// render loop
+	while (!glfwWindowShouldClose(window)) {
+		processInput(window, 0.0f);
+
+		glClearColor(0.1f, 0.4f, 0.7f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+
+		Sleep(1);
+	}
+
 	glfwTerminate();
 }

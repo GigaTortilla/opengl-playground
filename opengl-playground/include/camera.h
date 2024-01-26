@@ -1,10 +1,27 @@
 #pragma once
 #include <cglm/struct.h>
 
-static vec3s cameraPos = {
-	0.0f, 0.0f, 3.0f
-};
-static vec3s cameraFront = {
-	0.0f, 0.0f, -1.0f
-};
-static float cameraSpeed = 0.1f;
+///////////////////////////////////////////////////////////////////////////////
+// fly style camera
+
+typedef struct {
+	// cam attributes
+	vec3s pos;
+	vec3s front;
+	vec3s up;
+	vec3s right;
+	vec3s worldUp;
+	// euler angles
+	float yaw;
+	float pitch;
+	// settings
+	float speed;
+	float sens;
+	float fov;
+} Camera;
+
+///////////////////////////////////////////////////////////////////////////////
+// functions
+
+void cam_updatePos(Camera* cam, GLFWwindow* window, float frameDelta);
+void cam_updateMouse(Camera* cam);

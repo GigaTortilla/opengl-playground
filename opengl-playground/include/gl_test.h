@@ -1,6 +1,9 @@
 #ifndef GL_TEST_H
 #define GL_TEST_H 1
 
+#include <camera.h>
+#include <glfw3.h>
+
 #define X_AXIS (vec3s){ 1.0f, 0.0f, 0.0f }
 #define Y_AXIS (vec3s){ 0.0f, 1.0f, 0.0f }
 #define Z_AXIS (vec3s){ 0.0f, 0.0f, 1.0f }
@@ -19,8 +22,7 @@ unsigned int genBindVBO(float vertices[], size_t size);
 unsigned int genBindEBO(float vertices[], unsigned int indices[], size_t iSize);
 void textureRectanglePointerArithmetic();
 unsigned int genBindStdTexture(char* imgData, int width, int height);
-void updateCamera(GLFWwindow* window, float frameDelta);
-void calculateMouseMovements();
+void cam_updateMouse();
 void render_image_mix();
 void spin_and_scale_2d();
 void render_rectangle_3d();
@@ -28,6 +30,7 @@ void spin_cube();
 void spin_10_cubes();
 void rotate_scene();
 void free_movement();
+void gl_test();
 
 // triangles
 static float triVerticesOne[] = {
