@@ -18,10 +18,15 @@ typedef struct {
 	float speed;
 	float sens;
 	float fov;
+	// mouse memory
+	float lastMouseX;
+	float lastMouseY;
+	bool firstMouse;
 } Camera;
 
 ///////////////////////////////////////////////////////////////////////////////
 // functions
 
 void cam_updatePos(Camera* cam, GLFWwindow* window, float frameDelta);
+void cam_updatePosFps(Camera* cam, GLFWwindow* window, float frameDelta);
 void cam_updateMouse(Camera* cam);

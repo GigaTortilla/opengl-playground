@@ -4643,7 +4643,7 @@ enum {
    STBI__F_avg=3,
    STBI__F_paeth=4,
    // synthetic filter used for first scanline to avoid needing a dummy row of 0s
-   STBI__F_avg_first
+   STBI__F_avfirst
 };
 
 static stbi_uc first_row_filter[5] =
@@ -4651,7 +4651,7 @@ static stbi_uc first_row_filter[5] =
    STBI__F_none,
    STBI__F_sub,
    STBI__F_none,
-   STBI__F_avg_first,
+   STBI__F_avfirst,
    STBI__F_sub // Paeth with b=c=0 turns out to be equivalent to sub
 };
 
@@ -4778,7 +4778,7 @@ static int stbi__create_png_image_raw(stbi__png *a, stbi_uc *raw, stbi__uint32 r
          for (k = filter_bytes; k < nk; ++k)
             cur[k] = STBI__BYTECAST(raw[k] + stbi__paeth(cur[k-filter_bytes], prior[k], prior[k-filter_bytes]));
          break;
-      case STBI__F_avg_first:
+      case STBI__F_avfirst:
          memcpy(cur, raw, filter_bytes);
          for (k = filter_bytes; k < nk; ++k)
             cur[k] = STBI__BYTECAST(raw[k] + (cur[k-filter_bytes] >> 1));

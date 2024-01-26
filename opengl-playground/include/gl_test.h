@@ -22,7 +22,7 @@ unsigned int genBindVBO(float vertices[], size_t size);
 unsigned int genBindEBO(float vertices[], unsigned int indices[], size_t iSize);
 void textureRectanglePointerArithmetic();
 unsigned int genBindStdTexture(char* imgData, int width, int height);
-void cam_updateMouse();
+void cam_updateMouse(Camera* cam);
 void render_image_mix();
 void spin_and_scale_2d();
 void render_rectangle_3d();

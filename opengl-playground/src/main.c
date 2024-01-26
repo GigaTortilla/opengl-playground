@@ -8,14 +8,14 @@
 #include <gl_test.h>
 
 int main(int argc, char** argv) {
-	/*render_image_mix();
-	spin_and_scale_2d();
-	render_rectangle_3d();
-	spin_cube();
-	spin_10_cubes();
-	rotate_scene();*/
-	free_movement();
-	//gl_test();
+	//render_image_mix();
+	//spin_and_scale_2d();
+	//render_rectangle_3d();
+	//spin_cube();
+	//spin_10_cubes();
+	//rotate_scene();
+	//free_movement();
+	gl_test();
 
 	return 0;
 }

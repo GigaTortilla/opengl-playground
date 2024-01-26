@@ -15,19 +15,20 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Globals
 
+// cam has to be global to be available to callback functions
 Camera cam = {
 	.front = { 0.0f, 0.0f, -1.0f },
-	.pos = { 0.0f, 0.0f, 0.0f },
+	.pos = { 0.0f, 0.0f, 3.0f },
 	.up = { 0.0f, 1.0f, 0.0f },
 	.speed = 2.5f,
-	.pitch = -90.0f,
-	.yaw = 0.0f,
+	.pitch = 0.0f,
+	.yaw = -90.0f,
 	.fov = 45.0f,
-	.sens = 0.1f
+	.sens = 0.1f,
+	.lastMouseX = 300.0f,
+	.lastMouseY = 400.0f,
+	.firstMouse = true
 };
-float g_lastMouseX = 300.0f;
-float g_lastMouseY = 400.0f;
-bool g_firstMouse = true;
 
 /////////////////////////////////////////////////////////////////////////////////
 // Callbacks
@@ -36,16 +37,16 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
-	if (g_firstMouse) {
-		g_lastMouseX = xpos;
-		g_lastMouseY = ypos;
-		g_firstMouse = false;
+	if (cam.firstMouse) {
+		cam.lastMouseX = xpos;
+		cam.lastMouseY = ypos;
+		cam.firstMouse = false;
 	}
 
-	float xOffset = xpos - g_lastMouseX;
-	float yOffset = g_lastMouseY - ypos;
-	g_lastMouseX = xpos;
-	g_lastMouseY = ypos;
+	float xOffset = xpos - cam.lastMouseX;
+	float yOffset = cam.lastMouseY - ypos;
+	cam.lastMouseX = xpos;
+	cam.lastMouseY = ypos;
 
 	xOffset *= cam.sens;
 	yOffset *= cam.sens;
@@ -73,7 +74,7 @@ void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset) {
 void processInput(GLFWwindow* window, float frameDelta) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-	cam_updatePos(&cam, window, frameDelta);
+	cam_updatePosFps(&cam, window, frameDelta);
 	cam_updateMouse(&cam);
 }
 GLFWwindow* initWindow(int width, int height) {
@@ -601,13 +602,13 @@ void free_movement() {
 	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
 
 	// pointer arithmetic
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), 0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	// shader program
-	unsigned int program = buildShaderProgram("test.vert", "spin_cube.frag");
+	unsigned int program = buildShaderProgram("spin_cube_mvp.vert", "spin_cube.frag");
 	glUseProgram(program);
 
 	// load image
@@ -667,14 +668,20 @@ void free_movement() {
 void gl_test() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+	// capture cursor
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
 
-	unsigned int program = buildShaderProgram("spin_cube.vert", "spin_cube.frag");
+	unsigned int program = buildShaderProgram("spin_cube_mvp.vert", "spin_cube.frag");
 	glUseProgram(program);
 
+	// set callbacks
+	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+	glfwSetScrollCallback(window, scrollCallBack);
 
 	// vertex pointer arithmetic
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
@@ -694,29 +701,31 @@ void gl_test() {
 	glActiveTexture(GL_TEXTURE0);
 
 	// mvp locations
-	unsigned int modelLoc = glGetUniformLocation(program, "model");
-	unsigned int viewLoc = glGetUniformLocation(program, "view");
-	unsigned int perspectiveLoc = glGetUniformLocation(program, "perspective");
-
-	// mvp
-	mat4s model = glms_mat4_identity();
-	mat4s view = glms_mat4_identity();
-	mat4s perspective = glms_mat4_identity();
-
-	// give mvp to uniforms
-	glUniformMatrix4fv(modelLoc, 1, false, model.raw);
-	glUniformMatrix4fv(viewLoc, 1, false, view.raw);
-	glUniformMatrix4fv(perspectiveLoc, 1, false, perspective.raw);
-
+	unsigned int mvpLoc = glGetUniformLocation(program, "mvp");
+	
 	// z buffer
 	glEnable(GL_DEPTH_TEST);
 
+	float lastFrame = 0.0f;
+
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
-		processInput(window, 0.0f);
+		float frameDelta = updateFrameDelta(&lastFrame);
+		processInput(window, frameDelta);
 
-		glClearColor(0.1f, 0.4f, 0.7f, 1.0f);
+		// update color
+		glClearColor(0.1f, 0.4f, 0.55f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// mvp
+		mat4s model = glms_mat4_identity();
+		mat4s view = glms_lookat(cam.pos, glms_vec3_add(cam.pos, cam.front), cam.up);
+		mat4s perspective = glms_perspective(glm_rad(cam.fov), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
+		
+		mat4s mvp = glms_mul(glms_mul(perspective, view), model);
+
+		// give mvp to uniforms
+		glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		
