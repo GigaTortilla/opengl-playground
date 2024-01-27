@@ -837,7 +837,7 @@ void gl_test() {
 				mvp = glms_translate(mvp, (vec3s) { 0.0f, 0.0f, 1.0f });
 				// grass cube
 				glUseProgram(cubeProgram);
-				glBindTexture(GL_TEXTURE_2D, grassTopTex);
+				glBindTexture(GL_TEXTURE_2D, grassSideTex);
 				glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
 				glBindVertexArray(VAOcube);
 				glDrawArrays(GL_TRIANGLES, 0, cubeVertexCount);
