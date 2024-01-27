@@ -144,8 +144,8 @@ unsigned int genBindStdTexture(byte* imgData, int width, int height) {
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	// texture wrapping
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// texture filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -327,6 +327,7 @@ void render_rectangle_3d() {
 	mat4s perspective = glms_perspective(glm_rad(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
 	mat4s model = glms_rotate_make(glm_rad(-55.0f), X_AXIS);
 	mat4s view = glms_translate_make((vec3s){ 0.0f, 0.0f, -3.0f });
+	mat4s mvp = glms_mul(glms_mul(perspective, view), model);
 
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);
@@ -353,13 +354,9 @@ void render_rectangle_3d() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	int modelLoc = glGetUniformLocation(program, "model");
-	int viewLoc = glGetUniformLocation(program, "view");
-	int perspectiveLoc = glGetUniformLocation(program, "perspective");
-	glUniformMatrix4fv(modelLoc, 1, false, model.raw);
-	glUniformMatrix4fv(viewLoc, 1, false, view.raw);
-	glUniformMatrix4fv(perspectiveLoc, 1, false, perspective.raw);
-
+	unsigned int mvpLoc = glGetUniformLocation(program, "mvp");
+	glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
+	
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window, 0.0f);
@@ -709,7 +706,7 @@ void xz_plane_movement() {
 
 	// mvp locations
 	unsigned int mvpLoc = glGetUniformLocation(planeProgram, "mvp");
-	
+
 	// z buffer
 	glEnable(GL_DEPTH_TEST);
 
@@ -720,7 +717,7 @@ void xz_plane_movement() {
 	while (!glfwWindowShouldClose(window)) {
 		float frameDelta = updateFrameDelta(&lastFrame);
 		processInput(window, frameDelta);
-		
+
 		// update color
 		glClearColor(0.1f, 0.4f, 0.55f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -742,6 +739,111 @@ void xz_plane_movement() {
 		glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
 		glBindVertexArray(VAOxzplane);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+
+		Sleep(1);
+	}
+
+	glfwTerminate();
+}
+void gl_test() {
+	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	// capture cursor
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	// set callbacks
+	glfwSetCursorPosCallback(window, mouseCallback);
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+	glfwSetScrollCallback(window, scrollCallBack);
+
+	unsigned int VBOs[2];
+	glGenBuffers(2, &VBOs);
+
+	// cube
+	unsigned int VAOcube = genBindVAO(VBOs[0], cubeVertices, sizeof(cubeVertices));
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// xzPlane
+	unsigned int VAOxzplane = genBindVAO(VBOs[1], xzPlaneTexVertices, sizeof(xzPlaneTexVertices));
+	textureRectanglePointerArithmetic();
+
+	unsigned int planeProgram = buildShaderProgram("render_rectangle_3d.vert", "render_rectangle_3d.frag");
+	unsigned int cubeProgram = buildShaderProgram("spin_cube_mvp.vert", "spin_cube.frag");
+
+	// textures
+	stbi_set_flip_vertically_on_load(true);
+	unsigned int dejavuW, dejavuH, dejavuChannels;
+	unsigned int grassTopW, grassTopH, grassTopChannels;
+	unsigned int grassSideW, grassSideH, grassSideChannels;
+	byte* imgDejavu = stbi_load("images\\dejavu.jpg", &dejavuW, &dejavuH, &dejavuChannels, 0);
+	byte* imgGrassTop = stbi_load("images\\grass.jpg", &grassTopW, &grassTopH, &grassTopChannels, 0);
+	byte* imgGrassSide = stbi_load("images\\grass_side.png", &grassSideW, &grassSideH, &grassSideChannels, 0);
+	if (!imgDejavu || !imgGrassTop || !imgGrassSide) {
+		printf("Could not load image.");
+		return;
+	}
+	unsigned int dejavuTex = genBindStdTexture(imgDejavu, dejavuW, dejavuH);
+	unsigned int grassTopTex = genBindStdTexture(imgGrassTop, grassTopW, grassTopH);
+	unsigned int grassSideTex = genBindStdTexture(imgGrassSide, grassSideW, grassSideH);
+
+	// uniform locations
+	unsigned int mvpLoc = glGetUniformLocation(planeProgram, "mvp");
+
+	// z buffer
+	glEnable(GL_DEPTH_TEST);
+
+	// render variables
+	float lastFrame = 0.0f;
+
+	// render loop
+	while (!glfwWindowShouldClose(window)) {
+		float frameDelta = updateFrameDelta(&lastFrame);
+		processInput(window, frameDelta);
+
+		// update color
+		glClearColor(0.1f, 0.4f, 0.55f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// mvp
+		mat4s model = glms_mat4_identity();
+		mat4s view = glms_lookat(cam.pos, glms_vec3_add(cam.pos, cam.front), cam.up);
+		mat4s perspective = glms_perspective(glm_rad(cam.fov), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
+		mat4s mvp = glms_mul(glms_mul(perspective, view), model);
+
+		// cube
+		glUseProgram(cubeProgram);
+		glBindTexture(GL_TEXTURE_2D, dejavuTex);
+		glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
+		glBindVertexArray(VAOcube);
+		glDrawArrays(GL_TRIANGLES, 0, cubeVertexCount);
+
+		// plane
+		glUseProgram(planeProgram);
+		glBindTexture(GL_TEXTURE_2D, grassTopTex);
+		glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
+		glBindVertexArray(VAOxzplane);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		for (size_t x = 0; x < 10; x++)	{
+			mvp = glms_translate(mvp, (vec3s) { 1.0f, 0.0f, 0.0f });
+			int z = 0;
+			for (; z < 10; z++) {
+				mvp = glms_translate(mvp, (vec3s) { 0.0f, 0.0f, 1.0f });
+				// grass cube
+				glUseProgram(cubeProgram);
+				glBindTexture(GL_TEXTURE_2D, grassTopTex);
+				glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
+				glBindVertexArray(VAOcube);
+				glDrawArrays(GL_TRIANGLES, 0, cubeVertexCount);
+			}
+			mvp = glms_translate(mvp, (vec3s) { 0.0f, 0.0f, -z });
+		}
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);

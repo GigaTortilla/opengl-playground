@@ -147,14 +147,26 @@ static float cubePositions[] = {
    -1.3f,  1.0f, -1.5f
 };
 
-// xplane
+// xzplane
 static float xzPlaneVertices[] = {
     // positions         // colors
-   -100.0f, -0.5f, -100.0f,   0.2f, 0.4f, 0.1f,   // top right
-   -100.0f, -0.5f,  100.0f,   0.2f, 0.4f, 0.1f,   // bottom right
-    100.0f, -0.5f, -100.0f,   0.2f, 0.4f, 0.1f,   // bottom left
-    100.0f, -0.5f,  100.0f,   0.2f, 0.4f, 0.1f,   // top left 
-   -100.0f, -0.5f,  100.0f,   0.2f, 0.4f, 0.1f,   // bottom right
-    100.0f, -0.5f, -100.0f,   0.2f, 0.4f, 0.1f,   // bottom left
+   -100.0f, -0.5f, -100.0f,   0.3f, 0.35f, 0.1f,   // top right
+   -100.0f, -0.5f,  100.0f,   0.2f, 0.35f, 0.1f,   // bottom right
+    100.0f, -0.5f, -100.0f,   0.2f, 0.35f, 0.1f,   // bottom left
+
+    100.0f, -0.5f,  100.0f,   0.3f, 0.35f, 0.1f,   // top left 
+   -100.0f, -0.5f,  100.0f,   0.2f, 0.35f, 0.1f,   // bottom right
+    100.0f, -0.5f, -100.0f,   0.2f, 0.35f, 0.1f    // bottom left
+};
+// xzplane
+static float xzPlaneTexVertices[] = {
+    // positions              // colors          // texture
+   -500.0f, -0.5f, -500.0f,   0.0f, 0.0f, 0.0f,  101.0f, -100.0f,   // top right
+   -500.0f, -0.5f,  500.0f,   0.0f, 0.0f, 0.0f,  101.0f,  101.0f,   // bottom right
+    500.0f, -0.5f, -500.0f,   0.0f, 0.0f, 0.0f, -100.0f, -100.0f,   // bottom left
+
+    500.0f, -0.5f,  500.0f,   0.f, 0.0f, 0.0f, -100.0f,  101.0f,   // top left 
+   -500.0f, -0.5f,  500.0f,   0.f, 0.0f, 0.0f,  101.0f,  101.0f,   // bottom right
+    500.0f, -0.5f, -500.0f,   0.f, 0.0f, 0.0f, -100.0f, -100.0f    // bottom left
 };
 #endif

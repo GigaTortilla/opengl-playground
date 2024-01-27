@@ -15,7 +15,8 @@ int main(int argc, char** argv) {
 	//spin_10_cubes();
 	//rotate_scene();
 	//free_movement();
-	xz_plane_movement();
+	//xz_plane_movement();
+	gl_test();
 
 	return 0;
 }
