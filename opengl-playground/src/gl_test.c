@@ -665,29 +665,36 @@ void free_movement() {
 	// clean up glfw resources
 	glfwTerminate();
 }
-void gl_test() {
+void xz_plane_movement() {
 	GLFWwindow* window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	// capture cursor
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	unsigned int VAO = genBindVAO(VBO, cubeVertices, sizeof(cubeVertices));
-
-	unsigned int program = buildShaderProgram("spin_cube_mvp.vert", "spin_cube.frag");
-	glUseProgram(program);
 
 	// set callbacks
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 	glfwSetScrollCallback(window, scrollCallBack);
 
-	// vertex pointer arithmetic
+	unsigned int VBOs[2];
+	glGenBuffers(2, &VBOs);
+
+	// cube
+	unsigned int VAOcube = genBindVAO(VBOs[0], cubeVertices, sizeof(cubeVertices));
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	// xzPlane
+	unsigned int VAOxzplane = genBindVAO(VBOs[1], xzPlaneVertices, sizeof(xzPlaneVertices));
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	unsigned int planeProgram = buildShaderProgram("fps_movement.vert", "fps_movement.frag");
+	unsigned int texProgram = buildShaderProgram("spin_cube_mvp.vert", "spin_cube.frag");
 
 	// texture
 	stbi_set_flip_vertically_on_load(true);
@@ -701,18 +708,19 @@ void gl_test() {
 	glActiveTexture(GL_TEXTURE0);
 
 	// mvp locations
-	unsigned int mvpLoc = glGetUniformLocation(program, "mvp");
+	unsigned int mvpLoc = glGetUniformLocation(planeProgram, "mvp");
 	
 	// z buffer
 	glEnable(GL_DEPTH_TEST);
 
+	// render variables
 	float lastFrame = 0.0f;
 
 	// render loop
 	while (!glfwWindowShouldClose(window)) {
 		float frameDelta = updateFrameDelta(&lastFrame);
 		processInput(window, frameDelta);
-
+		
 		// update color
 		glClearColor(0.1f, 0.4f, 0.55f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -721,14 +729,20 @@ void gl_test() {
 		mat4s model = glms_mat4_identity();
 		mat4s view = glms_lookat(cam.pos, glms_vec3_add(cam.pos, cam.front), cam.up);
 		mat4s perspective = glms_perspective(glm_rad(cam.fov), WINDOW_WIDTH / WINDOW_HEIGHT, NEAR_PLANE, FAR_PLANE);
-		
 		mat4s mvp = glms_mul(glms_mul(perspective, view), model);
 
-		// give mvp to uniforms
+		// cube
+		glUseProgram(texProgram);
 		glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
+		glBindVertexArray(VAOcube);
+		glDrawArrays(GL_TRIANGLES, 0, cubeVertexCount);
 
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		
+		// plane
+		glUseProgram(planeProgram);
+		glUniformMatrix4fv(mvpLoc, 1, false, mvp.raw);
+		glBindVertexArray(VAOxzplane);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 

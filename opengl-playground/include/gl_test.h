@@ -30,7 +30,7 @@ void spin_cube();
 void spin_10_cubes();
 void rotate_scene();
 void free_movement();
-void gl_test();
+void xz_plane_movement();
 
 // triangles
 static float triVerticesOne[] = {
@@ -131,6 +131,7 @@ static float cubeVertices[] = {
     -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
+static float cubeVertexCount = 36;
 
 // cube positions
 static float cubePositions[] = {
@@ -144,5 +145,16 @@ static float cubePositions[] = {
     1.5f,  2.0f, -2.5f,
     1.5f,  0.2f, -1.5f,
    -1.3f,  1.0f, -1.5f
+};
+
+// xplane
+static float xzPlaneVertices[] = {
+    // positions         // colors
+   -100.0f, -0.5f, -100.0f,   0.2f, 0.4f, 0.1f,   // top right
+   -100.0f, -0.5f,  100.0f,   0.2f, 0.4f, 0.1f,   // bottom right
+    100.0f, -0.5f, -100.0f,   0.2f, 0.4f, 0.1f,   // bottom left
+    100.0f, -0.5f,  100.0f,   0.2f, 0.4f, 0.1f,   // top left 
+   -100.0f, -0.5f,  100.0f,   0.2f, 0.4f, 0.1f,   // bottom right
+    100.0f, -0.5f, -100.0f,   0.2f, 0.4f, 0.1f,   // bottom left
 };
 #endif
