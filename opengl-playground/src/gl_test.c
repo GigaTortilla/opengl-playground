@@ -15,10 +15,9 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Globals
 
-// cam has to be global to be available to callback functions
 Camera cam = {
 	.front = { 0.0f, 0.0f, -1.0f },
-	.pos = { 0.0f, 0.0f, 3.0f },
+	.pos = { 0.0f, 1.0f, 3.0f },
 	.up = { 0.0f, 1.0f, 0.0f },
 	.speed = 2.5f,
 	.pitch = 0.0f,
@@ -29,6 +28,9 @@ Camera cam = {
 	.lastMouseY = 400.0f,
 	.firstMouse = true
 };
+
+// time variables
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Callbacks
@@ -139,7 +141,7 @@ void textureRectanglePointerArithmetic() {
 	glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 }
-unsigned int genBindStdTexture(byte* imgData, int width, int height) {
+unsigned int genBindStdTexture(char* imgData, int width, int height) {
 	unsigned int texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -147,8 +149,8 @@ unsigned int genBindStdTexture(byte* imgData, int width, int height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	// texture filtering
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	// create texture and free data
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData);
 	glGenerateMipmap(GL_TEXTURE_2D);

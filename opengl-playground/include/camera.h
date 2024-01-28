@@ -2,7 +2,7 @@
 #include <cglm/struct.h>
 
 ///////////////////////////////////////////////////////////////////////////////
-// fly style camera
+// camera
 
 typedef struct {
 	// cam attributes
@@ -30,3 +30,9 @@ typedef struct {
 void cam_updatePos(Camera* cam, GLFWwindow* window, float frameDelta);
 void cam_updatePosFps(Camera* cam, GLFWwindow* window, float frameDelta);
 void cam_updateMouse(Camera* cam);
+void cam_moveForward(Camera* cam);
+void cam_moveBackward(Camera* cam);
+void cam_moveRight(Camera* cam);
+void cam_moveLeft(Camera* cam);
+void cam_moveForwardFps(Camera* cam);
+void cam_moveBackwardFps(Camera* cam);
