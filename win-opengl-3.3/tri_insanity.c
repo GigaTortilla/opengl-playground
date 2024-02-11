@@ -7,7 +7,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-
+	
 int main(int argc, char *argv[])
 {
 	// Initialize and configure GLFW
@@ -43,39 +43,31 @@ int main(int argc, char *argv[])
 	////////////////////////////////////////////
 	/// Build and compile the shader program ///
 	////////////////////////////////////////////
-	unsigned int shaderProgramOrange = buildShaderProgram("triangle.vert", "orange_tri.frag");
-	unsigned int shaderProgramYellow = buildShaderProgram("triangle.vert", "yellow_tri.frag");
+	unsigned int shaderProgramTri = buildShaderProgram("shader.vert", "shader.frag");
 	
 	// Example data 
-	float leftTriangle[] = {
-		-0.9f, -0.5f, 0.0f,  // left 
-        -0.0f, -0.5f, 0.0f,  // right
-        -0.45f, 0.5f, 0.0f,  // top 
-	};
-	float rightTriangle[] = {
-		0.0f, -0.5f, 0.0f,  // left
-        0.9f, -0.5f, 0.0f,  // right
-        0.45f, 0.5f, 0.0f   // top 
+	float vertices[] = {
+		// positions         // colors
+    	 0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+    	-0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+    	 0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 	};
 	
 	// Set up Vertex Buffer Object and Vertex Array Object
-	unsigned int VBOs[2], VAOs[2];
-	glGenVertexArrays(2, VAOs);
-	glGenBuffers(2, VBOs);
+	unsigned int VBO, VAO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
 	
 	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-	glBindVertexArray(VAOs[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(leftTriangle), leftTriangle, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	// Position attribute at attribute position 0 in the vertex shader layout
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
-	
-	// no need to unbind since we're directly binding a different VAO the next few lines
-	glBindVertexArray(VAOs[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(rightTriangle), rightTriangle, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	// Color attribute at attribute position 1 in the vertex shader layout
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	
 	// unbind only when necessary
 	// since VAOs require a call to glBindVertexArray to be modified anyways
@@ -96,25 +88,15 @@ int main(int argc, char *argv[])
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		// render with the shader program and vertex array(s) 
-		glUseProgram(shaderProgramOrange);
+		glUseProgram(shaderProgramTri);
 		
-		// change the color of the first triangle
+		// change the color of the triangle
 		float timeValue = glfwGetTime();
-		float redValue = sin(3 * timeValue) / 2.0f + 0.5f;
-		int leftTriangleColorLocation = glGetUniformLocation(shaderProgramOrange, "ourColor");
-		glUniform4f(leftTriangleColorLocation, redValue, 0.65f, 0.0f, 1.0f);
+		float offsetValue = sin(3 * timeValue) / 3.0f;
+		int triangleOffsetLocation = glGetUniformLocation(shaderProgramTri, "ourOffsetX");
+		glUniform1f(triangleOffsetLocation, offsetValue);
 		
-		glBindVertexArray(VAOs[0]);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		
-		glUseProgram(shaderProgramYellow);
-		
-		// Change the color of the second triangle
-		int rightTriangleColorLocation = glGetUniformLocation(shaderProgramYellow, "ourColor");
-		float greenValue = 1.0f - redValue;
-		glUniform4f(rightTriangleColorLocation, 1.0f, greenValue, 0.0f, 1.0f);		
-		
-		glBindVertexArray(VAOs[1]);
+		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		// glBindVertexArray(0);
 		
@@ -122,10 +104,9 @@ int main(int argc, char *argv[])
 		glfwPollEvents();
 	}
 	// Ressource deallocation
-	glDeleteVertexArrays(2, VAOs);
-	glDeleteBuffers(2, VBOs);
-	glDeleteProgram(shaderProgramOrange);
-	glDeleteProgram(shaderProgramYellow);
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteProgram(shaderProgramTri);
 	
 	glfwTerminate();
 	return 0;
