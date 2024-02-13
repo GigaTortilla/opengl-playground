@@ -10,7 +10,7 @@ uniform float ourOffsetX;    // offsets the vertex horizontally
 
 void main()
 {
-    gl_Position = vec4(aPos.x + ourOffsetX, aPos.y, aPos.z, 1.0);
+    gl_Position = vec4(aPos.x + ourOffsetX, aPos.y - ourOffsetX, aPos.z, 1.0);
 	textureCoords = aTexCoords;
 	ourColor = aColor;
 } 

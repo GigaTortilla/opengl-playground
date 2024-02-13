@@ -8,6 +8,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+void setWindowIcon(GLFWwindow* window, const char* path);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 	
@@ -35,6 +36,7 @@ int main(int argc, char *argv[])
 	// Somehow setting the viewport here after window creation crashes the application
 	// glViewport(0, 0, 800, 600);		// Sets the viewport to the lower left corner with size 800x600
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	setWindowIcon(window, "textures/coding.png");
 	
 	// Initialize and load OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -95,8 +97,8 @@ int main(int argc, char *argv[])
 	
 	glBindTexture(GL_TEXTURE_2D, texture1);
 	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
@@ -161,8 +163,11 @@ int main(int argc, char *argv[])
 		// change the blend of the container
 		float timeValue = glfwGetTime();
 		float blendValue = (sin(3 * timeValue) + 1.0) * 0.3;
+		float offsetValue = sin(2 * timeValue) * 0.5;
 		int blendLocation = glGetUniformLocation(shaderProgramTri, "blend");
+		int offsetLocation = glGetUniformLocation(shaderProgramTri, "ourOffsetX");
 		glUniform1f(blendLocation, blendValue);
+		glUniform1f(offsetLocation, offsetValue);
 		
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -179,6 +184,26 @@ int main(int argc, char *argv[])
 	
 	glfwTerminate();
 	return 0;
+}
+
+// Sets the window icon to the image in the specified path
+// Prefer to use .png files
+void setWindowIcon(GLFWwindow* window, const char* path)
+{
+	GLFWimage icons[1];
+	int iconWidth, iconHeight, iconNrChannels;
+	icons[0].pixels = stbi_load(path, &iconWidth, &iconHeight, &iconNrChannels, 0);
+	if(icons[0].pixels)
+	{
+		icons[0].width = iconWidth;
+		icons[0].height = iconHeight;
+		glfwSetWindowIcon(window, 1, icons);
+	}
+	else 
+	{
+		printf("Icon could not be loaded!");
+	}
+	stbi_image_free(icons[0].pixels);
 }
 
 // Processes all inputs for the render loop

@@ -70,11 +70,11 @@ unsigned int buildShaderProgram(const char *vertexShaderFileName, const char *fr
     char vertexShaderPath[PATH_SIZE];
     char fragmentShaderPath[PATH_SIZE];
 
-    char *_ = getcwd(vertexShaderPath, PATH_SIZE);
+    getcwd(vertexShaderPath, PATH_SIZE);
     strcat(vertexShaderPath, "\\shaders\\");
     strcat(vertexShaderPath, vertexShaderFileName);
 
-    _ = getcwd(fragmentShaderPath, PATH_SIZE);
+    getcwd(fragmentShaderPath, PATH_SIZE);
     strcat(fragmentShaderPath, "\\shaders\\");
     strcat(fragmentShaderPath, fragmentShaderFileName);
 

@@ -10,5 +10,5 @@ uniform float blend;
   
 void main()
 {
-    FragColor = mix(texture(texture1, textureCoords), texture(texture2, textureCoords), blend) * vec4(ourColor, 1.0);
+    FragColor = mix(texture(texture1, vec2(1.7 * textureCoords.s, 1.3 * textureCoords.t)), texture(texture2, vec2(1.0 - 2.0 * textureCoords.s, 2.0 * textureCoords.t)), blend) * vec4(ourColor, 1.0);
 }
