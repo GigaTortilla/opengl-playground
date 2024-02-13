@@ -162,8 +162,8 @@ int main(int argc, char *argv[])
 		
 		// change the blend of the container
 		float timeValue = glfwGetTime();
-		float blendValue = (sin(3 * timeValue) + 1.0) * 0.3;
-		float offsetValue = sin(2 * timeValue) * 0.5;
+		float blendValue = (sin(3.0 * timeValue) + 1.0) * 0.3;
+		float offsetValue = sin(2.5 * timeValue) * 0.5;
 		int blendLocation = glGetUniformLocation(shaderProgramTri, "blend");
 		int offsetLocation = glGetUniformLocation(shaderProgramTri, "ourOffsetX");
 		glUniform1f(blendLocation, blendValue);
